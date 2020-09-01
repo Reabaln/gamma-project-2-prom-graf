@@ -30,7 +30,6 @@ spec:
               container('kubectl') {
                   sh '''
                       kubectl --token=$TOKEN create namespace monitor
-		     #kubectl --token=$TOKEN taint nodes k3d-labs-agent-1 key:NoExecute
                   '''
               }
           }
