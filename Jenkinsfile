@@ -4,53 +4,50 @@ pipeline {
       yaml """
 apiVersion: v1
 kind: Pod
-metadata:
-  labels:
-    service_name: department-service
-    service_type: REST
 spec:
   containers:
-  - name: dnd
-    image: docker:latest
-    command: 
-    - cat
-    tty: true
-    volumeMounts: 
-    - mountPath: /var/run/docker.sock
-      name: docker-sock
   - name: kubectl
     image: bryandollery/terraform-packer-aws-alpine
     command:
     - cat
     tty: true
-  volumes:
-  - name: docker-sock
-    hostPath:
-      path: /var/run/docker.sock  
-      type: Socket
+  - name: helm
+    image: alpine/helm
+    command:
+    - cat
+    tty: true
 """
     }
   }
   environment {
-    CREDS = credentials('reab-docker-hub-creds')
-    DOCKER_NAMESPACE = 'reabaln'
-    SERVICE_NAME = 'pro-graf-service'
-    TOKEN=credentials('5c169eaa-8db2-4f65-bea0-a9dd8b9f84c6')
+    TOKEN=credentials('cffc1cc9-775e-4507-86b8-54433e85e3ae')
   }
+	
   stages {
-      stage("Install") {
-          steps {
-              container('dnd') {
-                  sh '''
-			helm repo add stable https://kubernetes-charts.storage.googleapis.com
-			helm repo update
-			kubectl create namespace monitor
-			helm install prometheus-operator stable/prometheus-operator --namespace monitor --set grafana.service.type=LoadBalancer
-			kubectl apply -f ingress.yaml -n monitor
 
+      stage("Deploy") {
+          steps {
+              container('kubectl') {
+                  sh '''
+                      kubectl --token=$TOKEN create namespace monitor
+		     #kubectl --token=$TOKEN taint nodes k3d-labs-agent-1 key:NoExecute
                   '''
               }
           }
       }
+
+      stage("Install") {
+          steps {
+              container('helm') {
+                  sh '''
+			helm repo add stable https://kubernetes-charts.storage.googleapis.com
+			helm repo update
+			helm install prometheus-operator stable/prometheus-operator --namespace monitor --set grafana.service.type=NodePort --set prometheusOperator.admissionWebhooks.enabled=false --set prometheusOperator.admissionWebhooks.patch.enabled=false --set prometheusOperator.tlsProxy.enabled=false
+                  '''
+              }
+          }
+      }
+	  
 }
 }
+
