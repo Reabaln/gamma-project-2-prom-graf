@@ -32,7 +32,7 @@ spec:
     }
   }
   environment {
-    CREDS = credentials('creds-reab')
+    CREDS = credentials('reab-docker-hub-creds')
     DOCKER_NAMESPACE = 'reabaln'
     SERVICE_NAME = 'pro-graf-service'
     TOKEN=credentials('5c169eaa-8db2-4f65-bea0-a9dd8b9f84c6')
