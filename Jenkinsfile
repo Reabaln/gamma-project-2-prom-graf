@@ -24,7 +24,12 @@ spec:
   }
 	
   stages {
+     stage ('check-changes'){ 
+        when {
+                changeset "**/*.*"
+            }
 
+  stages {
       stage("Deploy") {
           steps {
               container('kubectl') {
@@ -45,8 +50,9 @@ spec:
                   '''
               }
           }
-      }
-	  
-}
+      }	  
+    }
+  }
+ }
 }
 
